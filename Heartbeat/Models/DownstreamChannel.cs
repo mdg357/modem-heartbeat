@@ -13,7 +13,13 @@ namespace Heartbeat.Models
 
         public DownstreamChannel() :base()
         {
+        }
 
+        public override string ToString()
+        {
+            return String.Format("\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\"",
+                ChannelID, Frequency, SignalToNoiseRatio, 
+                DownstreamModulation, PowerLevel);
         }
     }
 }
