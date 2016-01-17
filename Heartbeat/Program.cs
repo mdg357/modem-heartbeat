@@ -26,6 +26,7 @@ namespace Heartbeat
             string startupMessage = string.Format("Application started at {0} {1}",
                 DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString());
 
+            Console.Title = "Heartbeat";
             Console.WriteLine(startupMessage);
             _log.InfoFormat(startupMessage);
 
