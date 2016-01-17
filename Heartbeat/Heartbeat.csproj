@@ -93,7 +93,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Heartbeat_TemporaryKey.pfx" />
     <None Include="Log4Net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
