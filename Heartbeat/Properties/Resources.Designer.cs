@@ -61,7 +61,7 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C:\Users\User\Downloads\Heartbeat\Downstream.csv.
+        ///   Looks up a localized string similar to Downstream.
         /// </summary>
         internal static string File_Downstream {
             get {
@@ -70,7 +70,7 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C:\Users\User\Downloads\Heartbeat\SignalStats.csv.
+        ///   Looks up a localized string similar to SignalStats.
         /// </summary>
         internal static string File_SignalStats {
             get {
@@ -79,7 +79,7 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C:\Users\User\Downloads\Heartbeat\Upstream.csv.
+        ///   Looks up a localized string similar to Upstream.
         /// </summary>
         internal static string File_Upstream {
             get {
@@ -88,11 +88,47 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [{0} {1}] - {2}.
+        ///   Looks up a localized string similar to C:\Users\User\Downloads\Heartbeat\{0}.{1}.csv.
         /// </summary>
-        internal static string Format_StatusMessage {
+        internal static string FileNameFormat {
             get {
-                return ResourceManager.GetString("Format_StatusMessage", resourceCulture);
+                return ResourceManager.GetString("FileNameFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0} {1}] - Unable to reach page. Status: &apos;{2} - {3}&apos;.
+        /// </summary>
+        internal static string Format_StatusMessageConsole_Error {
+            get {
+                return ResourceManager.GetString("Format_StatusMessageConsole_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0} {1}] - Success.
+        /// </summary>
+        internal static string Format_StatusMessageConsole_Success {
+            get {
+                return ResourceManager.GetString("Format_StatusMessageConsole_Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to reach page. Status: &apos;{0} - {1}&apos;.
+        /// </summary>
+        internal static string Format_StatusMessageLog_Error {
+            get {
+                return ResourceManager.GetString("Format_StatusMessageLog_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Success.
+        /// </summary>
+        internal static string Format_StatusMessageLog_Success {
+            get {
+                return ResourceManager.GetString("Format_StatusMessageLog_Success", resourceCulture);
             }
         }
         
@@ -120,6 +156,33 @@ namespace Heartbeat.Properties {
         internal static string Header_Upstream {
             get {
                 return ResourceManager.GetString("Header_Upstream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /html[1]/body[1]/center[1]/table[1] //td.
+        /// </summary>
+        internal static string NodeSelection_Downstream {
+            get {
+                return ResourceManager.GetString("NodeSelection_Downstream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /html[1]/body[1]/center[3]/table[1] //td.
+        /// </summary>
+        internal static string NodeSelection_SignalStats {
+            get {
+                return ResourceManager.GetString("NodeSelection_SignalStats", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /html[1]/body[1]/center[2]/table[1] //td.
+        /// </summary>
+        internal static string NodeSelection_Upstream {
+            get {
+                return ResourceManager.GetString("NodeSelection_Upstream", resourceCulture);
             }
         }
         

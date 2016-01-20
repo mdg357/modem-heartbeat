@@ -73,25 +73,18 @@ namespace Heartbeat
                 statusDescription = "Not Found";
             }
 
-            // If we get anything other than a 200, log an error
+            // If we get anything other than a 200, log an error            
             if (statusCode != HttpStatusCode.OK)
             {
-                string status = string.Format(Properties.Resources.Format_StatusMessage,
-                    DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(),
-                    String.Format("Unable to reach page. Status: '{1} - {2}'", 
-                        statusCode, statusDescription));
-                WriteStatus(status, true);
+                WriteStatus(DateTime.Now, true, statusCode, statusDescription);
             }
             else
             {
-                string status = string.Format(Properties.Resources.Format_StatusMessage,
-                    DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(), 
-                        "Success");
-                WriteStatus(status, false);
+                DateTime currentTime = DateTime.Now;
+                string cleanedResponse = CleanResponse(responseBody);
+                ParseResponse(cleanedResponse, currentTime);
+                WriteStatus(currentTime);
             }
-
-            string cleanedResponse = CleanResponse(responseBody);
-            ParseResponse(cleanedResponse, DateTime.Now);
         }
 
         /// <summary>
@@ -101,16 +94,17 @@ namespace Heartbeat
         static void ParseResponse(string responseBody, DateTime currentTime)
         {
             HtmlDocument htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(responseBody);
             HtmlNodeCollection downstreamNodes = null;
             HtmlNodeCollection upstreamNodes = null;
             HtmlNodeCollection signalStatsNodes = null;
 
+            htmlDoc.LoadHtml(responseBody);
+
             if (htmlDoc.DocumentNode != null)
             {
-                downstreamNodes = htmlDoc.DocumentNode.SelectNodes("/html[1]/body[1]/center[1]/table[1] //td");
-                upstreamNodes = htmlDoc.DocumentNode.SelectNodes("/html[1]/body[1]/center[2]/table[1] //td");
-                signalStatsNodes = htmlDoc.DocumentNode.SelectNodes("/html[1]/body[1]/center[3]/table[1] //td");
+                downstreamNodes = htmlDoc.DocumentNode.SelectNodes(Properties.Resources.NodeSelection_Downstream);
+                upstreamNodes = htmlDoc.DocumentNode.SelectNodes(Properties.Resources.NodeSelection_Upstream);
+                signalStatsNodes = htmlDoc.DocumentNode.SelectNodes(Properties.Resources.NodeSelection_SignalStats);
             }
 
             if (downstreamNodes != null)
@@ -143,6 +137,15 @@ namespace Heartbeat
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="nodes"></param>
+        /// <param name="propertyMap"></param>
+        /// <param name="propertyOffset"></param>
+        /// <param name="list"></param>
+        /// <param name="columnCount"></param>
         static void ProcessNodes<T>(HtmlNodeCollection nodes, Dictionary<string, string> propertyMap, 
             Dictionary<string, int> propertyOffset, ref List<T> list, int columnCount)
         {
@@ -189,31 +192,46 @@ namespace Heartbeat
         /// </summary>
         /// <param name="status"></param>
         /// <param name="isError"></param>
-        static void WriteStatus(String status, bool isError)
+        static void WriteStatus(DateTime time, bool isError = false, 
+            HttpStatusCode statusCode = HttpStatusCode.OK, string statusDescription = "")
         {
             if(isError)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(status);
-                _log.Error(status);
+
+                Console.WriteLine(Properties.Resources.Format_StatusMessageConsole_Error,
+                    time.ToShortDateString(), time.ToShortTimeString(),
+                    statusCode, statusDescription);
+                _log.ErrorFormat(Properties.Resources.Format_StatusMessageLog_Error,
+                    statusCode, statusDescription);
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(status);
-                _log.Info(status);
+
+                Console.WriteLine(Properties.Resources.Format_StatusMessageConsole_Success,
+                    time.ToShortDateString(), time.ToShortTimeString());
+                _log.Info(Properties.Resources.Format_StatusMessageLog_Success);
             }
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="header"></param>
+        /// <param name="filename"></param>
         static void WriteToFiles<T>(List<T> list, string header, string filename)
         {
             bool writeHeader = false;
+            string fileNameAndPath = GetFileNameAndPath(filename);
 
-            if (!File.Exists(filename))
+            if (!File.Exists(fileNameAndPath))
                 writeHeader = true;
 
-            using (StreamWriter sw = new StreamWriter(filename, true))
+            using (StreamWriter sw = new StreamWriter(fileNameAndPath, true))
             {
                 if (writeHeader)
                     sw.WriteLine(header);
@@ -221,6 +239,17 @@ namespace Heartbeat
                 foreach (var entry in list)
                     sw.WriteLine(entry.ToString());
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        static string GetFileNameAndPath(String filename)
+        {
+            return String.Format(Properties.Resources.FileNameFormat, 
+                filename, DateTime.Today.ToString("YYYYMMdd"));
         }
     }
 }

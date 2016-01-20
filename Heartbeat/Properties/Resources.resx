@@ -117,17 +117,29 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FileNameFormat" xml:space="preserve">
+    <value>C:\Users\User\Downloads\Heartbeat\{0}.{1}.csv</value>
+  </data>
   <data name="File_Downstream" xml:space="preserve">
-    <value>C:\Users\User\Downloads\Heartbeat\Downstream.csv</value>
+    <value>Downstream</value>
   </data>
   <data name="File_SignalStats" xml:space="preserve">
-    <value>C:\Users\User\Downloads\Heartbeat\SignalStats.csv</value>
+    <value>SignalStats</value>
   </data>
   <data name="File_Upstream" xml:space="preserve">
-    <value>C:\Users\User\Downloads\Heartbeat\Upstream.csv</value>
+    <value>Upstream</value>
   </data>
-  <data name="Format_StatusMessage" xml:space="preserve">
-    <value>[{0} {1}] - {2}</value>
+  <data name="Format_StatusMessageConsole_Error" xml:space="preserve">
+    <value>[{0} {1}] - Unable to reach page. Status: '{2} - {3}'</value>
+  </data>
+  <data name="Format_StatusMessageConsole_Success" xml:space="preserve">
+    <value>[{0} {1}] - Success</value>
+  </data>
+  <data name="Format_StatusMessageLog_Error" xml:space="preserve">
+    <value>Unable to reach page. Status: '{0} - {1}'</value>
+  </data>
+  <data name="Format_StatusMessageLog_Success" xml:space="preserve">
+    <value>Success</value>
   </data>
   <data name="Header_Downstream" xml:space="preserve">
     <value>Timestamp,Channel ID,Frequency (Hz),Signal to Noise Ratio (dB),Downstream Modulation,Power Level (dBmV)</value>
@@ -137,6 +149,15 @@
   </data>
   <data name="Header_Upstream" xml:space="preserve">
     <value>Timestamp,Channel ID,Frequency (Hz),Ranging Service ID,Symbol Rate (Msym/sec),Power Level (dBmV),Upstream Modulation,Ranging Status</value>
+  </data>
+  <data name="NodeSelection_Downstream" xml:space="preserve">
+    <value>/html[1]/body[1]/center[1]/table[1] //td</value>
+  </data>
+  <data name="NodeSelection_SignalStats" xml:space="preserve">
+    <value>/html[1]/body[1]/center[3]/table[1] //td</value>
+  </data>
+  <data name="NodeSelection_Upstream" xml:space="preserve">
+    <value>/html[1]/body[1]/center[2]/table[1] //td</value>
   </data>
   <data name="URL" xml:space="preserve">
     <value>http://192.168.100.1/cmSignalData.htm</value>
