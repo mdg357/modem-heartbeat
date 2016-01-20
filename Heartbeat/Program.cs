@@ -16,9 +16,6 @@ namespace Heartbeat
     class Program
     {
         static readonly ILog _log = LogManager.GetLogger(typeof(Program));
-        public static int DOWNSTREAM_CHANNEL_COUNT = 8;
-        public static int UPSTREAM_CHANNEL_COUNT = 4;
-        public static int SIGNAL_STATS_COUNT = 8;
 
         static void Main(string[] args)
         {
@@ -30,12 +27,14 @@ namespace Heartbeat
             Console.WriteLine(startupMessage);
             _log.InfoFormat(startupMessage);
 
-            Timer aTimer = new Timer();
+            /*Timer aTimer = new Timer();
             aTimer.Elapsed += new ElapsedEventHandler(RequestModemStatusPage);
             aTimer.Interval = requestInterval;
             aTimer.Enabled = true;
 
-            Console.ReadKey(true);
+            Console.ReadKey(true);*/
+
+            RequestModemStatusPage(null, null);
         }
 
         /// <summary>
@@ -45,17 +44,14 @@ namespace Heartbeat
         /// <param name="e"></param>
         static void RequestModemStatusPage(object source, ElapsedEventArgs e)
         {
-            string pageUrl = "http://192.168.100.1/cmSignalData.htm"; // Home
-            int requestTimeout = 30 * 1000; // 30 seconds
-            string statusMessageFormat = "[{0} {1}] - {2}";
             string responseBody = string.Empty;
             string statusDescription = string.Empty;
             HttpStatusCode statusCode = HttpStatusCode.OK;
 
             // Create a request for the URL. 
-            WebRequest request = WebRequest.Create(pageUrl);
+            WebRequest request = WebRequest.Create(Properties.Resources.URL);
             request.Credentials = CredentialCache.DefaultCredentials;
-            request.Timeout = requestTimeout;
+            request.Timeout = Properties.Settings.Default.Request_Timeout;
 
             try
             {
@@ -80,33 +76,30 @@ namespace Heartbeat
             // If we get anything other than a 200, log an error
             if (statusCode != HttpStatusCode.OK)
             {
-                string status = string.Format(statusMessageFormat,
+                string status = string.Format(Properties.Resources.Format_StatusMessage,
                     DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(),
-                    String.Format("Unable to reach page '{0}'. Status: '{1} - {2}'",
-                        pageUrl, statusCode, statusDescription));
+                    String.Format("Unable to reach page. Status: '{1} - {2}'", 
+                        statusCode, statusDescription));
                 WriteStatus(status, true);
             }
             else
             {
-                string status = string.Format(statusMessageFormat,
-                    DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(),
-                    "Success");
+                string status = string.Format(Properties.Resources.Format_StatusMessage,
+                    DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(), 
+                        "Success");
                 WriteStatus(status, false);
             }
 
             string cleanedResponse = CleanResponse(responseBody);
-            ParseResponse(cleanedResponse);
+            ParseResponse(cleanedResponse, DateTime.Now);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="responseBody"></param>
-        static void ParseResponse(string responseBody)
+        static void ParseResponse(string responseBody, DateTime currentTime)
         {
-            List<DownstreamChannel> downstreamChannels = ListHelper.InitalizeDownstreamChannelList(DOWNSTREAM_CHANNEL_COUNT);
-            List<UpstreamChannel> upstreamChannels = ListHelper.InitalizeUpstreamChannelList(UPSTREAM_CHANNEL_COUNT);
-            List<SignalStats> signalStats = ListHelper.InitalizeSignalStatsList(SIGNAL_STATS_COUNT);
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(responseBody);
             HtmlNodeCollection downstreamNodes = null;
@@ -120,96 +113,60 @@ namespace Heartbeat
                 signalStatsNodes = htmlDoc.DocumentNode.SelectNodes("/html[1]/body[1]/center[3]/table[1] //td");
             }
 
-            if(downstreamNodes != null)
-                ProcessDownstreamNodes(downstreamNodes, ref downstreamChannels);
+            if (downstreamNodes != null)
+            {
+                List<DownstreamChannel> downstreamChannels = DownstreamHelper.Initialize(currentTime);
+                ProcessNodes(downstreamNodes, DownstreamHelper.PropertyMap(), DownstreamHelper.PropertyOffset(), 
+                    ref downstreamChannels, Properties.Settings.Default.Channel_Count_Downstream);
+                WriteToFiles(downstreamChannels, Properties.Resources.Header_Downstream, 
+                    Properties.Resources.File_Downstream);
+            }
 
             if (upstreamNodes != null)
-                ProcessUpstreamNodes(upstreamNodes, ref upstreamChannels);
+            {
+                List<UpstreamChannel> upstreamChannels = UpstreamHelper.Initialize(currentTime);
+                
+                
+                ProcessNodes(upstreamNodes, UpstreamHelper.PropertyMap(), UpstreamHelper.PropertyOffset(), 
+                    ref upstreamChannels, Properties.Settings.Default.Channel_Count_Upstream);
+                WriteToFiles(upstreamChannels, Properties.Resources.Header_Upstream, 
+                    Properties.Resources.File_Upstream);
+            }
 
             if (signalStatsNodes != null)
-                ProcessSignalStatsNodes(signalStatsNodes, ref signalStats);
-
-            WriteToFiles(downstreamChannels, upstreamChannels, signalStats);
-        }
-
-        static void ProcessDownstreamNodes(HtmlNodeCollection nodes, ref List<DownstreamChannel> channels)
-        {
-            List<string> propertyNames = new List<string>()
             {
-                "Channel ID", "Frequency", "Signal to Noise Ratio",
-                "Downstream Modulation", "Power Level"
-            };
-
-            foreach (var node in nodes)
-            {
-                foreach (var name in propertyNames)
-                {
-                    if (node.InnerText.Contains(name))
-                    {
-                        List<string> columnValues = GetCellsFromOffset(nodes,
-                            nodes.GetNodeIndex(node), DOWNSTREAM_CHANNEL_COUNT);
-                        ListHelper.SetPropertyFromList(columnValues, ref channels, name);
-                        break;
-                    }
-
-                }
+                List<SignalStats> signalStats = SignalStatsHelper.Initialize(currentTime);
+                ProcessNodes(signalStatsNodes, SignalStatsHelper.PropertyMap(), SignalStatsHelper.PropertyOffset(), 
+                    ref signalStats, Properties.Settings.Default.Count_Signal_Stats);
+                WriteToFiles(signalStats, Properties.Resources.Header_SignalStats, 
+                    Properties.Resources.File_SignalStats);
             }
         }
 
-        static void ProcessUpstreamNodes(HtmlNodeCollection nodes, ref List<UpstreamChannel> channels)
+        static void ProcessNodes<T>(HtmlNodeCollection nodes, Dictionary<string, string> propertyMap, 
+            Dictionary<string, int> propertyOffset, ref List<T> list, int columnCount)
         {
-            List<string> propertyNames = new List<string>()
-            {
-                "Channel ID", "Frequency", "Ranging Service ID", "Symbol Rate",
-                "Power Level", "Upstream Modulation", "Ranging Status"
-            };
-
             foreach (var node in nodes)
             {
-                foreach (var name in propertyNames)
+                foreach (KeyValuePair<string, string> name in propertyMap)
                 {
-                    if (node.InnerText.Contains(name))
+                    if (node.InnerText.Trim().StartsWith(name.Value))
                     {
-                        List<string> columnValues = GetCellsFromOffset(nodes,
-                            nodes.GetNodeIndex(node), UPSTREAM_CHANNEL_COUNT);
-                        ListHelper.SetPropertyFromList(columnValues, ref channels, name);
+                        int indexWithOffset = nodes.GetNodeIndex(node) + propertyOffset[name.Key];
+                        List<string> columnValues = GetCellsFromOffset(nodes, indexWithOffset, columnCount);
+                        ListHelper.SetPropertyFromList(columnValues, ref list, name.Key);
                         break;
                     }
-
                 }
             }
-        }
-
-        static void ProcessSignalStatsNodes(HtmlNodeCollection nodes, ref List<SignalStats> channels)
-        {
-            List<string> propertyNames = new List<string>()
-            {
-                "Channel ID", "Total Unerrored Codewords",
-                "Total Correctable Codewords", "Total Uncorrectable Codewords"
-            };
-
-            foreach (var node in nodes)
-            {
-                foreach (var name in propertyNames)
-                {
-                    if (node.InnerText.Contains(name))
-                    {
-                        List<string> columnValues = GetCellsFromOffset(nodes,
-                            nodes.GetNodeIndex(node), SIGNAL_STATS_COUNT);
-                        ListHelper.SetPropertyFromList(columnValues, ref channels, name);
-                        break;
-                    }
-
-                }
-            }
-        }
+        }        
 
         static List<string> GetCellsFromOffset(HtmlNodeCollection nodes, int index, int offsetMax)
         {
             List<string> items = new List<string>();
 
             for (int offset = 1; offset <= offsetMax; ++offset)
-                items.Add(nodes[index + offset].InnerText);
+                items.Add(nodes[index + offset].InnerText.Trim());
 
             return items;
         }
@@ -249,48 +206,19 @@ namespace Heartbeat
             Console.ResetColor();
         }
 
-        static void WriteToFiles(List<DownstreamChannel> down, List<UpstreamChannel> up, List<SignalStats> signalStats)
+        static void WriteToFiles<T>(List<T> list, string header, string filename)
         {
-            string downFile = @"C:\Users\User\Downloads\Downstream.csv";
-            string upFile = @"C:\Users\User\Downloads\Upstream.csv";
-            string signalStatsFile = @"C:\Users\User\Downloads\SignalStats.csv";
-            bool writeDownHeader = false;
-            bool writeUpHeader = false;
-            bool writeSignalStatsHeader = false;
+            bool writeHeader = false;
 
-            if (!File.Exists(downFile))
-                writeDownHeader = true;
+            if (!File.Exists(filename))
+                writeHeader = true;
 
-            if (!File.Exists(upFile))
-                writeUpHeader = true;
-
-            if (!File.Exists(signalStatsFile))
-                writeSignalStatsHeader = true;
-
-            using (StreamWriter sw = new StreamWriter(downFile, true))
+            using (StreamWriter sw = new StreamWriter(filename, true))
             {
-                if (writeDownHeader)
-                    sw.WriteLine("Channel ID,Frequency,Signal to Noise Ratio,Downstream Modulation,Power Level");
+                if (writeHeader)
+                    sw.WriteLine(header);
 
-                foreach (var entry in down)
-                    sw.WriteLine(entry.ToString());
-            }
-
-            using (StreamWriter sw = new StreamWriter(upFile, true))
-            {
-                if (writeUpHeader)
-                    sw.WriteLine("Channel ID,Frequency,Ranging Service ID,Symbol Rate,Power Level,Upstream Modulation,Ranging Status");
-
-                foreach (var entry in up)
-                    sw.WriteLine(entry.ToString());
-            }
-
-            using (StreamWriter sw = new StreamWriter(signalStatsFile, true))
-            {
-                if (writeSignalStatsHeader)
-                    sw.WriteLine("Channel ID,Total Unerrored Codewords,Total Correctable Codewords,Total Uncorrectable Codewords");
-
-                foreach (var entry in signalStats)
+                foreach (var entry in list)
                     sw.WriteLine(entry.ToString());
             }
         }
