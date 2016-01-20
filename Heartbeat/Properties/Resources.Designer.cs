@@ -61,6 +61,15 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Heartbeat.
+        /// </summary>
+        internal static string ConsoleTitle {
+            get {
+                return ResourceManager.GetString("ConsoleTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downstream.
         /// </summary>
         internal static string File_Downstream {
@@ -97,7 +106,25 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [{0} {1}] - Unable to reach page. Status: &apos;{2} - {3}&apos;.
+        ///   Looks up a localized string similar to yyyyMMdd.
+        /// </summary>
+        internal static string Format_FileTimestamp {
+            get {
+                return ResourceManager.GetString("Format_FileTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Application started at {0} {1}.
+        /// </summary>
+        internal static string Format_StartupMessage {
+            get {
+                return ResourceManager.GetString("Format_StartupMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0} {1}] - Unable to reach page. Status: {2}.
         /// </summary>
         internal static string Format_StatusMessageConsole_Error {
             get {
@@ -115,7 +142,7 @@ namespace Heartbeat.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to reach page. Status: &apos;{0} - {1}&apos;.
+        ///   Looks up a localized string similar to Unable to reach page. Status: {0}.
         /// </summary>
         internal static string Format_StatusMessageLog_Error {
             get {

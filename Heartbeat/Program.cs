@@ -19,22 +19,26 @@ namespace Heartbeat
 
         static void Main(string[] args)
         {
-            int requestInterval = 60 * 1000; // 1 minute
-            string startupMessage = string.Format("Application started at {0} {1}",
-                DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString());
+            Console.Title = Properties.Resources.ConsoleTitle;
 
-            Console.Title = "Heartbeat";
+            string startupMessage = string.Format(Properties.Resources.Format_StartupMessage,
+                DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString());
             Console.WriteLine(startupMessage);
             _log.InfoFormat(startupMessage);
 
-            /*Timer aTimer = new Timer();
-            aTimer.Elapsed += new ElapsedEventHandler(RequestModemStatusPage);
-            aTimer.Interval = requestInterval;
-            aTimer.Enabled = true;
+            if (Properties.Settings.Default.IsDebug == false)
+            {
+                Timer aTimer = new Timer();
+                aTimer.Elapsed += new ElapsedEventHandler(RequestModemStatusPage);
+                aTimer.Interval = Properties.Settings.Default.QueryInterval;
+                aTimer.Enabled = true;
 
-            Console.ReadKey(true);*/
-
-            RequestModemStatusPage(null, null);
+                Console.ReadKey(true);
+            }
+            else
+            {
+                RequestModemStatusPage(null, null);
+            }
         }
 
         /// <summary>
@@ -44,9 +48,8 @@ namespace Heartbeat
         /// <param name="e"></param>
         static void RequestModemStatusPage(object source, ElapsedEventArgs e)
         {
-            string responseBody = string.Empty;
-            string statusDescription = string.Empty;
             HttpStatusCode statusCode = HttpStatusCode.OK;
+            string responseBody = string.Empty;
 
             // Create a request for the URL. 
             WebRequest request = WebRequest.Create(Properties.Resources.URL);
@@ -58,7 +61,6 @@ namespace Heartbeat
                 using (WebResponse response = request.GetResponse())
                 {
                     statusCode = ((HttpWebResponse)response).StatusCode;
-                    statusDescription = ((HttpWebResponse)response).StatusDescription;
                     Stream dataStream = response.GetResponseStream();
 
                     using (StreamReader reader = new StreamReader(dataStream))
@@ -70,13 +72,12 @@ namespace Heartbeat
             catch(Exception)
             {
                 statusCode = HttpStatusCode.NotFound;
-                statusDescription = "Not Found";
             }
 
             // If we get anything other than a 200, log an error            
             if (statusCode != HttpStatusCode.OK)
             {
-                WriteStatus(DateTime.Now, true, statusCode, statusDescription);
+                WriteStatus(DateTime.Now, true, statusCode);
             }
             else
             {
@@ -192,18 +193,15 @@ namespace Heartbeat
         /// </summary>
         /// <param name="status"></param>
         /// <param name="isError"></param>
-        static void WriteStatus(DateTime time, bool isError = false, 
-            HttpStatusCode statusCode = HttpStatusCode.OK, string statusDescription = "")
+        static void WriteStatus(DateTime time, bool isError = false, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             if(isError)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
 
                 Console.WriteLine(Properties.Resources.Format_StatusMessageConsole_Error,
-                    time.ToShortDateString(), time.ToShortTimeString(),
-                    statusCode, statusDescription);
-                _log.ErrorFormat(Properties.Resources.Format_StatusMessageLog_Error,
-                    statusCode, statusDescription);
+                    time.ToShortDateString(), time.ToShortTimeString(), statusCode);
+                _log.ErrorFormat(Properties.Resources.Format_StatusMessageLog_Error, statusCode);
             }
             else
             {
@@ -249,7 +247,7 @@ namespace Heartbeat
         static string GetFileNameAndPath(String filename)
         {
             return String.Format(Properties.Resources.FileNameFormat, 
-                filename, DateTime.Today.ToString("YYYYMMdd"));
+                filename, DateTime.Today.ToString(Properties.Resources.Format_FileTimestamp));
         }
     }
 }

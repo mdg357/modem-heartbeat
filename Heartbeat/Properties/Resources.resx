@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ConsoleTitle" xml:space="preserve">
+    <value>Heartbeat</value>
+  </data>
   <data name="FileNameFormat" xml:space="preserve">
     <value>C:\Users\User\Downloads\Heartbeat\{0}.{1}.csv</value>
   </data>
@@ -129,14 +132,20 @@
   <data name="File_Upstream" xml:space="preserve">
     <value>Upstream</value>
   </data>
+  <data name="Format_FileTimestamp" xml:space="preserve">
+    <value>yyyyMMdd</value>
+  </data>
+  <data name="Format_StartupMessage" xml:space="preserve">
+    <value>Application started at {0} {1}</value>
+  </data>
   <data name="Format_StatusMessageConsole_Error" xml:space="preserve">
-    <value>[{0} {1}] - Unable to reach page. Status: '{2} - {3}'</value>
+    <value>[{0} {1}] - Unable to reach page. Status: {2}</value>
   </data>
   <data name="Format_StatusMessageConsole_Success" xml:space="preserve">
     <value>[{0} {1}] - Success</value>
   </data>
   <data name="Format_StatusMessageLog_Error" xml:space="preserve">
-    <value>Unable to reach page. Status: '{0} - {1}'</value>
+    <value>Unable to reach page. Status: {0}</value>
   </data>
   <data name="Format_StatusMessageLog_Success" xml:space="preserve">
     <value>Success</value>
